@@ -1,0 +1,32 @@
+# ── Output data ──
+data/
+*.json
+*.csv
+
+# ── Credentials / secrets ──
+.env
+*.env
+.api_key
+secrets/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# ── IDE / Editor ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+desktop.ini
