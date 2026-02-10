@@ -15,7 +15,6 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from getpass import getpass
 from pathlib import Path
 
 import requests
@@ -55,7 +54,7 @@ def _request_with_retry(method: str, url: str, headers: dict,
         resp = requests.request(method, url, headers=headers, params=params,
                                 timeout=120)
         if resp.status_code == 429:
-            retry_after = int(resp.headers.get("Retry-After", 2))
+            retry_after = float(resp.headers.get("Retry-After", 2))
             print(f"  ⏳ Rate-limited. Retrying in {retry_after}s "
                   f"(attempt {attempt}/{max_retries})…")
             time.sleep(retry_after)
@@ -81,12 +80,24 @@ def fetch_all_campaigns(headers: dict) -> list[dict]:
         }
         resp = _request_with_retry("GET", f"{BASE_URL}/campaigns",
                                    headers=headers, params=params)
-        batch = resp.json()
+        data = resp.json()
+
+        # v2 API wraps campaigns in {"campaigns": [...], "pagination": {...}}
+        if isinstance(data, dict) and "campaigns" in data:
+            batch = data["campaigns"]
+            pagination = data.get("pagination", {})
+            total_pages = pagination.get("totalPage", page)
+        elif isinstance(data, list):
+            batch = data
+            total_pages = page  # unknown, stop when empty
+        else:
+            break
+
         if not batch:
             break
         campaigns.extend(batch)
-        print(f"   Page {page}: {len(batch)} campaigns")
-        if len(batch) < CAMPAIGNS_PAGE_LIMIT:
+        print(f"   Page {page}/{total_pages}: {len(batch)} campaigns")
+        if page >= total_pages:
             break
         page += 1
         time.sleep(REQUEST_DELAY)
@@ -162,8 +173,8 @@ def merge_and_save(all_leads: list[dict], output_path: Path) -> None:
 # MAIN
 # ──────────────────────────────────────────────
 def main() -> None:
-    # Prompt for API key securely (masked input)
-    api_key = getpass("🔑 Enter your Lemlist API key: ")
+    # Prompt for API key
+    api_key = input("🔑 Enter your Lemlist API key: ")
     if not api_key.strip():
         print("❌ No API key provided. Exiting.")
         return
