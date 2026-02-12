@@ -21,9 +21,9 @@ from tqdm import tqdm
 # CONFIGURATION
 # ──────────────────────────────────────────────
 BASE_URL = "https://api.lemlist.com/api"
-INPUT_FILE = Path("data/unique_lead_ids.csv")
+INPUT_FILE = Path("data/matched_lead_ids.csv")
 VARIABLE_TO_ERASE = "phone"       # query param name to clear
-START_FROM_ROW = 15745            # 1-based; set to 1 to process all
+START_FROM_ROW = 1            # 1-based; set to 1 to process all
 MAX_WORKERS = 5                   # concurrent requests (stay within 20 req/2s)
 RATE_LIMIT_REQUESTS = 20
 RATE_LIMIT_WINDOW = 2             # seconds
